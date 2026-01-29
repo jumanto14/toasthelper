@@ -5,55 +5,61 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.Toast
 
 /**
  * ToastHelper
- * Simple Toast wrapper for Android (Production Ready)
+ * Simple, clean, and production-ready Toast library
  */
 object ToastHelper {
 
     private var toast: Toast? = null
-    private val handler = Handler(Looper.getMainLooper())
+    private val mainHandler = Handler(Looper.getMainLooper())
 
-    /**
-     * Show short toast
-     */
+    /* ---------------------------------------------------
+     * Public API (Simple & Clean)
+     * --------------------------------------------------- */
+
     fun show(context: Context, message: String) {
-        showInternal(context, message, Toast.LENGTH_SHORT, Gravity.BOTTOM)
+        text(context, message, Toast.LENGTH_SHORT, Gravity.BOTTOM)
+    }
+
+    fun long(context: Context, message: String) {
+        text(context, message, Toast.LENGTH_LONG, Gravity.BOTTOM)
+    }
+
+    fun center(context: Context, message: String) {
+        text(context, message, Toast.LENGTH_SHORT, Gravity.CENTER)
     }
 
     /**
-     * Show long toast
+     * Default custom toast provided by library
      */
-    fun showLong(context: Context, message: String) {
-        showInternal(context, message, Toast.LENGTH_LONG, Gravity.BOTTOM)
+    fun custom(context: Context) {
+        custom(
+            context = context,
+            layoutResId = R.layout.toast_custom,
+            duration = Toast.LENGTH_SHORT,
+            gravity = Gravity.BOTTOM
+        )
     }
 
     /**
-     * Show toast at center
+     * Advanced custom toast (optional)
      */
-    fun showCenter(context: Context, message: String) {
-        showInternal(context, message, Toast.LENGTH_SHORT, Gravity.CENTER)
-    }
-
-    /**
-     * Show custom layout toast
-     */
-    fun showCustom(
+    fun custom(
         context: Context,
         layoutResId: Int,
         duration: Int = Toast.LENGTH_SHORT,
         gravity: Int = Gravity.BOTTOM
     ) {
-        handler.post {
-            cancel()
+        mainHandler.post {
+            cancelInternal()
 
-            val inflater = LayoutInflater.from(context.applicationContext)
-            val view = inflater.inflate(layoutResId, null)
+            val appContext = context.applicationContext
+            val view = LayoutInflater.from(appContext).inflate(layoutResId, null)
 
-            toast = Toast(context.applicationContext).apply {
+            toast = Toast(appContext).apply {
                 this.view = view
                 this.duration = duration
                 setGravity(gravity, 0, 100)
@@ -62,31 +68,35 @@ object ToastHelper {
         }
     }
 
-    /**
-     * Cancel current toast
-     */
     fun cancel() {
-        toast?.cancel()
-        toast = null
+        mainHandler.post {
+            cancelInternal()
+        }
     }
 
-    private fun showInternal(
+    /* ---------------------------------------------------
+     * Internal helpers
+     * --------------------------------------------------- */
+
+    private fun text(
         context: Context,
         message: String,
         duration: Int,
         gravity: Int
     ) {
-        handler.post {
-            cancel()
+        mainHandler.post {
+            cancelInternal()
 
-            toast = Toast.makeText(
-                context.applicationContext,
-                message,
-                duration
-            ).apply {
+            val appContext = context.applicationContext
+            toast = Toast.makeText(appContext, message, duration).apply {
                 setGravity(gravity, 0, 100)
                 show()
             }
         }
+    }
+
+    private fun cancelInternal() {
+        toast?.cancel()
+        toast = null
     }
 }
